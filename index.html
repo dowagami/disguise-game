@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>変装逃亡ゲーム</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;color:#1a1a1a;}
+#app{width:100%;max-width:680px;}
+h1{font-size:20px;font-weight:600;text-align:center;margin-bottom:4px;}
+.tagline{font-size:13px;color:#666;text-align:center;margin-bottom:16px;}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:14px 18px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.section-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;transition:background .15s;font-family:inherit;}
+.btn:hover{background:#f5f5f5;}
+.btn:disabled{opacity:.4;cursor:default;}
+.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5;}
+.btn-primary:hover{background:#0C447C;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.loc-badge{font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid #ddd;color:#999;}
+.loc-badge.current{background:#E6F1FB;color:#185FA5;border-color:#378ADD;font-weight:600;}
+.loc-badge.past{text-decoration:line-through;color:#bbb;}
+.comment-box{background:#FAEEDA;border:1px solid #FAC775;border-radius:8px;padding:8px 12px;font-size:13px;color:#633806;margin-top:8px;}
+.slot{background:#f7f7f7;border:1px solid #e0e0e0;border-radius:8px;padding:6px;text-align:center;cursor:pointer;transition:border-color .15s;width:86px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.slot:hover{border-color:#378ADD;}
+.slot.active{border:2px solid #378ADD;background:#E6F1FB;}
+.slot.set{border-color:#185FA5;}
+.slot-emoji{font-size:21px;}
+.slot-label{font-size:10px;color:#999;}
+.slot-item-name{font-size:10px;color:#1a1a1a;font-weight:600;line-height:1.2;}
+.disguise-bar-outer{background:#f0f0f0;border-radius:6px;overflow:hidden;display:flex;flex-direction:column-reverse;}
+.disguise-bar-inner{width:100%;transition:height .5s cubic-bezier(.4,0,.2,1);border-radius:6px;}
+.disguise-label-row{display:flex;align-items:center;gap:5px;}
+.disguise-tick{width:10px;height:1px;background:#ddd;flex-shrink:0;}
+.disguise-tick.active{background:#185FA5;width:14px;}
+.disguise-label{font-size:11px;color:#aaa;line-height:1.4;}
+.disguise-label.active{color:#1a1a1a;font-weight:700;}
+.risk-display{padding:10px 12px;border-radius:10px;border:1px solid;transition:background .4s,border-color .4s;}
+.risk-eyes{font-size:22px;letter-spacing:2px;margin-bottom:4px;line-height:1;}
+.risk-text-big{font-size:15px;font-weight:700;margin-bottom:2px;}
+.risk-bar-wrap{background:rgba(0,0,0,.08);border-radius:4px;height:8px;overflow:hidden;margin-top:6px;}
+.risk-bar-inner{height:100%;border-radius:4px;transition:width .4s;}
+.hand-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.hand-item{background:#f7f7f7;border:1px solid #e0e0e0;border-radius:8px;padding:5px 3px;text-align:center;cursor:pointer;transition:all .15s;}
+.hand-item:hover{border-color:#378ADD;background:#E6F1FB;}
+.hand-item.equipped-badge{border-color:#185FA5;opacity:.45;pointer-events:none;}
+.hand-item .ie{font-size:19px;}
+.hand-item .inm{font-size:10px;color:#555;margin-top:2px;}
+.hand-item .ist{font-size:10px;color:#E67E22;}
+.hand-item .isl{font-size:9px;color:#aaa;}
+#escape-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center;}
+#escape-overlay.show{display:flex;}
+.escape-box{background:#fff;border-radius:14px;padding:1.75rem;max-width:350px;width:92%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.escape-scene{font-size:15px;color:#1a1a1a;min-height:110px;line-height:2;margin:10px 0;white-space:pre-wrap;}
+.escape-result{font-size:18px;font-weight:700;margin-top:8px;}
+.escape-discard{font-size:12px;color:#993C1D;margin-top:10px;line-height:1.9;text-align:left;}
+.newspaper{background:#f5f0e8;border:2px solid #333;border-radius:4px;padding:1rem;}
+.news-masthead{font-size:11px;color:#555;border-bottom:2px solid #333;padding-bottom:4px;margin-bottom:6px;text-align:center;font-family:Georgia,serif;}
+.news-title{font-size:20px;font-weight:700;color:#111;line-height:1.2;margin-bottom:5px;text-align:center;font-family:Georgia,serif;}
+.news-subtitle{font-size:12px;color:#444;text-align:center;margin-bottom:7px;}
+.news-rule{border:none;border-top:1px solid #999;margin:5px 0;}
+.news-body{font-size:11px;color:#333;line-height:1.7;column-count:2;column-gap:12px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div style="padding:1rem 0;">
+    <h1>🕵️ 変装逃亡ゲーム</h1>
+    <p class="tagline">変装して世界を逃げ回れ！火星を目指せ！</p>
+    <div id="game-root"></div>
+  </div>
+</div>
+<div id="escape-overlay">
+  <div class="escape-box">
+    <div id="esc-title" style="font-size:12px;color:#999;margin-bottom:2px;"></div>
+    <div id="esc-scene" class="escape-scene"></div>
+    <div id="esc-result" class="escape-result"></div>
+    <div id="esc-discard" class="escape-discard"></div>
+    <button class="btn btn-primary" id="esc-ok" style="margin-top:14px;display:none;" onclick="afterEscape()">つづける</button>
+  </div>
+</div>
+
+<script>
+const LOCATIONS=[{name:"東京",flag:"🗼",diff:1},{name:"名古屋",flag:"🏯",diff:1.2},{name:"大阪",flag:"🦌",diff:1.5},{name:"福岡",flag:"🐟",diff:1.8},{name:"ソウル",flag:"🇰🇷",diff:2.1},{name:"上海",flag:"🇨🇳",diff:2.4},{name:"バンコク",flag:"🇹🇭",diff:2.7},{name:"ドバイ",flag:"🇦🇪",diff:3.0},{name:"パリ",flag:"🇫🇷",diff:3.4},{name:"ニューヨーク",flag:"🗽",diff:3.8},{name:"ブラジル",flag:"🇧🇷",diff:4.2},{name:"月",flag:"🌕",diff:5.5},{name:"火星",flag:"🪐",diff:7.5}];
+const CRIMES=["下着泥棒","美術館窃盗","連続空き巣","宝石強奪","金庫破り","偽札製造","著名人なりすまし","国宝強奪","競馬八百長","マグロ密漁","ダイヤ横流し","古墳盗掘"];
+const CRIME_DESCS={"下着泥棒":"近隣住民の証言によると、犯人は毎回異なる変装で犯行に及んでいたという。","美術館窃盗":"国際的に指名手配されていた美術品窃盗犯がついに御用。関係者は絶句した。","連続空き巣":"全国を逃げ回った凄腕の空き巣犯がついに逮捕。粘り強い捜査が実を結んだ。","宝石強奪":"高級宝飾店から消えた宝石を持ったまま逃走を続けていた犯人が追い詰められた。","金庫破り":"精巧な変装で警備をくぐり抜けた金庫破りの常習犯。手口は映画さながらだった。","偽札製造":"本物と見分けのつかない偽札を製造し各地で使用。変装して逃走を続けていた。","著名人なりすまし":"芸能人や政治家になりすまして各地で詐欺を繰り返していた犯人が逮捕された。","国宝強奪":"博物館から姿を消した国宝を携えて逃走。専門家も唸らせた変装だったという。","競馬八百長":"各地の競馬場で不正を続けた犯人。巧みな変装で関係者に近づいていたとされる。","マグロ密漁":"高級マグロを密漁し続けた一味の主犯格がついに御用。漁師に変装していたとみられる。","ダイヤ横流し":"盗品ダイヤを国際的に横流しした犯人。パスポートを偽造し別人になりすましていた。","古墳盗掘":"文化財保護法違反。全国の古墳から副葬品を盗み、海外に持ち出そうとした。"};
+const SLOT_KEYS=["head","face","top","bottom","bag","shoes"];
+const SLOT_LABELS={head:"頭",face:"顔",top:"服（上）",bottom:"服（下）",bag:"持ち物",shoes:"靴"};
+const SLOT_ICONS={head:"🎩",face:"😶",top:"👕",bottom:"👖",bag:"👜",shoes:"👟"};
+const DISGUISE_LABELS=["手配書どおり","知り合いにはバレバレ","ぱっと見他人？","親でも素通り","誰が見ても別人"];
+const DISCARD_MSGS=["は警察に目撃情報が回ってしまった。廃棄しよう。","の特徴が手配書に追記されてしまった。処分しよう。","はもう使えない。捨てていくしかない。","は目立ちすぎた。置いていこう。","の似顔絵が配られてしまった。諦めよう。"];
+const COMBOS=[["t7","b4",30,"ゴリラ完全体"],["f7","h8",20,"お祭り芸人"],["t3","g1",20,"完璧なビジネスマン"],["t8","b8",25,"正統派和装"],["f1","h2",18,"昭和の変装王"],["t4","b3",18,"現場作業員"],["t2","h6",15,"完璧な観光客"],["f8","h4",30,"老人の二重装備"]];
+const ITEMS={head:[{id:"h1",name:"野球帽",emoji:"🧢",power:8,stars:1,slot:"head",flavor:"ありきたりすぎて変装になっているか怪しい"},{id:"h2",name:"シルクハット",emoji:"🎩",power:30,stars:2,slot:"head",flavor:"紳士のたしなみ。ただし目立つ"},{id:"h3",name:"金髪ウィッグ",emoji:"👱",power:50,stars:3,slot:"head",flavor:"日本人離れした見た目に。髪の毛が蒸れる"},{id:"h4",name:"ハゲヅラ",emoji:"👴",power:72,stars:4,slot:"head",flavor:"年寄りに見える。蒸れてきもちわるい…"},{id:"h5",name:"ニット帽",emoji:"🧶",power:10,stars:1,slot:"head",flavor:"目立たないが変装にもなっていない"},{id:"h6",name:"麦わら帽子",emoji:"👒",power:28,stars:2,slot:"head",flavor:"観光客っぽくて悪くない"},{id:"h7",name:"赤いベレー帽",emoji:"🎨",power:32,stars:2,slot:"head",flavor:"芸術家を装える。でも目立つ色だ"},{id:"h8",name:"サンタ帽",emoji:"🎅",power:70,stars:4,slot:"head",flavor:"なぜかクリスマスの人を演じることに"}],face:[{id:"f1",name:"鼻眼鏡",emoji:"🥸",power:48,stars:3,slot:"face",flavor:"昔の演歌歌手にいたなぁ、こういう人"},{id:"f2",name:"サングラス",emoji:"🕶️",power:25,stars:2,slot:"face",flavor:"スパイっぽいが夜はさすがに怪しい"},{id:"f3",name:"つけひげ",emoji:"🧔",power:30,stars:2,slot:"face",flavor:"口のまわりがかゆくなってきた"},{id:"f4",name:"フルフェイスマスク",emoji:"🎭",power:75,stars:4,slot:"face",flavor:"完全に別人だが誰もがギョッとする"},{id:"f5",name:"厚化粧",emoji:"💄",power:52,stars:3,slot:"face",flavor:"母親にも気づかれないかもしれない"},{id:"f6",name:"眼帯",emoji:"🏴‍☠️",power:27,stars:2,slot:"face",flavor:"海賊感がにじみ出てしまっている"},{id:"f7",name:"ピエロメイク",emoji:"🤡",power:92,stars:5,slot:"face",flavor:"子供が泣いている。明らかに目立ちすぎる"},{id:"f8",name:"老人メイク",emoji:"👵",power:68,stars:4,slot:"face",flavor:"プロのメイクアップ。顔の筋肉が疲れる"}],top:[{id:"t1",name:"スーツジャケット",emoji:"👔",power:10,stars:1,slot:"top",flavor:"ビジネスマン風。可もなく不可もなく"},{id:"t2",name:"ハワイアンシャツ",emoji:"🌺",power:32,stars:2,slot:"top",flavor:"いかにも観光客。さりげなく溶け込める"},{id:"t3",name:"白衣",emoji:"🥼",power:50,stars:3,slot:"top",flavor:"医者になりきっている。自信が大事"},{id:"t4",name:"工事作業服",emoji:"🦺",power:45,stars:3,slot:"top",flavor:"作業員に徹しきれるか問題"},{id:"t5",name:"セーター",emoji:"🧥",power:7,stars:1,slot:"top",flavor:"普通すぎて逆に記憶に残らない"},{id:"t6",name:"忍者服",emoji:"🥷",power:90,stars:5,slot:"top",flavor:"ステルスのつもりが全員に見られている"},{id:"t7",name:"ゴリラ着ぐるみ（上）",emoji:"🦍",power:78,stars:5,slot:"top",flavor:"上だけ着ても違和感しかない"},{id:"t8",name:"僧侶の衣",emoji:"🙏",power:53,stars:3,slot:"top",flavor:"お坊さんとして通りを歩く。南無…"}],bottom:[{id:"b1",name:"スーツパンツ",emoji:"👖",power:7,stars:1,slot:"bottom",flavor:"普通のズボン。変装感ゼロ"},{id:"b2",name:"ミニスカート",emoji:"👗",power:45,stars:3,slot:"bottom",flavor:"大胆な性別偽装作戦"},{id:"b3",name:"作業ズボン",emoji:"🔧",power:28,stars:2,slot:"bottom",flavor:"現場作業員風。汚れが気になる"},{id:"b4",name:"ゴリラ着ぐるみ（下）",emoji:"🦧",power:75,stars:5,slot:"bottom",flavor:"下だけ着ても謎の生き物にしか見えない"},{id:"b5",name:"ジーンズ",emoji:"🔵",power:5,stars:1,slot:"bottom",flavor:"ごく普通。良くも悪くも目立たない"},{id:"b6",name:"ふんどし",emoji:"🩱",power:88,stars:5,slot:"bottom",flavor:"誰も近づかない。それが狙いか"},{id:"b7",name:"バレエスカート",emoji:"🎀",power:68,stars:4,slot:"bottom",flavor:"プリマドンナを演じる覚悟が必要"},{id:"b8",name:"袴",emoji:"🎌",power:50,stars:3,slot:"bottom",flavor:"和装の下半身。威厳が出てきた"}],bag:[{id:"g1",name:"ブリーフケース",emoji:"💼",power:10,stars:1,slot:"bag",flavor:"サラリーマンの定番。なにも怪しくない"},{id:"g2",name:"花束",emoji:"💐",power:33,stars:2,slot:"bag",flavor:"花屋の配達員を演じる。愛されキャラ"},{id:"g3",name:"図面ケース",emoji:"📐",power:28,stars:2,slot:"bag",flavor:"建築士か設計士のふり。長くて邪魔"},{id:"g4",name:"ギターケース",emoji:"🎸",power:48,stars:3,slot:"bag",flavor:"ミュージシャン風。何か入っていそう"},{id:"g5",name:"赤ちゃん人形",emoji:"👶",power:72,stars:4,slot:"bag",flavor:"抱いて歩くと誰も怪しまない。重い"},{id:"g6",name:"巨大スーツケース",emoji:"🧳",power:50,stars:3,slot:"bag",flavor:"旅人を演じる。走れなくなった"},{id:"g7",name:"ピザ配達バッグ",emoji:"🍕",power:55,stars:3,slot:"bag",flavor:"配達員なら急いでいても不審でない"},{id:"g8",name:"現金の袋",emoji:"💰",power:3,stars:1,slot:"bag",flavor:"完全にアウト。なぜ持って来た"}],shoes:[{id:"s1",name:"革靴",emoji:"👞",power:8,stars:1,slot:"shoes",flavor:"ビジネス靴。足が痛くなってきた"},{id:"s2",name:"ハイヒール",emoji:"👠",power:45,stars:3,slot:"shoes",flavor:"走れないが足が長く見える"},{id:"s3",name:"ゴム長靴",emoji:"🥾",power:28,stars:2,slot:"shoes",flavor:"農作業員風。水溜まりも怖くない"},{id:"s4",name:"バレエシューズ",emoji:"🩰",power:32,stars:2,slot:"shoes",flavor:"軽くて動きやすい。目立たない"},{id:"s5",name:"スニーカー",emoji:"👟",power:6,stars:1,slot:"shoes",flavor:"普通すぎる。逆に記憶に残らない"},{id:"s6",name:"下駄",emoji:"🪵",power:52,stars:3,slot:"shoes",flavor:"カランコロン…音が鳴って目立つ"},{id:"s7",name:"フリッパー",emoji:"🤿",power:90,stars:5,slot:"shoes",flavor:"逃げ足に問題がある。大丈夫か"},{id:"s8",name:"バナナの皮",emoji:"🍌",power:30,stars:2,slot:"shoes",flavor:"履いた瞬間から危険な香り"}]};
+
+function starsHTML(n){return"★".repeat(n)+"☆".repeat(5-n);}
+function pick(arr,n){return[...arr].sort(()=>Math.random()-.5).slice(0,n);}
+function dealHand(existing=[]){const hand=[...existing];SLOT_KEYS.forEach(slot=>{const pool=ITEMS[slot].filter(i=>!hand.find(h=>h.id===i.id));hand.push(...pick(pool,2));});return hand;}
+
+let state={round:0,locationIdx:0,equipped:{head:null,face:null,top:null,bottom:null,bag:null,shoes:null},hand:dealHand(),prevEquipped:{head:null,face:null,top:null,bottom:null,bag:null,shoes:null},itemAge:{},suspicion:20,activeSlot:null,stealCount:0,message:"",gameOver:false,won:false,crime:CRIMES[Math.floor(Math.random()*CRIMES.length)]};
+
+function getComboBonus(){let bonus=0,comboName="";const ids=new Set(SLOT_KEYS.map(s=>state.equipped[s]?.id).filter(Boolean));COMBOS.forEach(([a,b,b2,name])=>{if(ids.has(a)&&ids.has(b)){bonus+=b2;comboName=name;}});return{bonus,comboName};}
+function calcDisguiseRaw(){let total=0;SLOT_KEYS.forEach(slot=>{const item=state.equipped[slot];if(item){const age=state.itemAge[item.id]||0;const decay=Math.max(0,1-age*.20);const prev=state.prevEquipped[slot];const isNew=!prev||prev.id!==item.id;const base=item.power*decay;total+=isNew?base:base*.35;}});const{bonus}=getComboBonus();return total+bonus;}
+function rawToDisplay(raw){const MAX_RAW=420;const ratio=Math.min(1,raw/MAX_RAW);return Math.round(Math.pow(ratio,0.65)*100);}
+function calcDisguise(){return rawToDisplay(calcDisguiseRaw());}
+function getRisk(susOverride){const d=calcDisguise();const diff=LOCATIONS[state.locationIdx].diff;const sus=susOverride!==undefined?susOverride:state.suspicion;return Math.max(0,Math.min(100,Math.round(sus*diff-d*.65)));}
+function getRiskInfo(r){if(r<20)return{text:"ほぼ安全",sub:"誰も気にしていません",color:"#2A6B12",bg:"#EAF3DE",border:"#C0DD97",bar:"#639922",eyes:1};if(r<38)return{text:"やや注意",sub:"ちらちら見られています",color:"#633806",bg:"#FAEEDA",border:"#FAC775",bar:"#EF9F27",eyes:2};if(r<56)return{text:"危険！",sub:"怪しまれています",color:"#8B3010",bg:"#FAEDE7",border:"#F5C4B3",bar:"#D85A30",eyes:4};if(r<75)return{text:"高危険！！",sub:"職務質問されそう",color:"#7A1F1F",bg:"#FAE0E0",border:"#F5A5A5",bar:"#E24B4A",eyes:6};return{text:"即逮捕レベル！！！",sub:"完全にマークされています",color:"#5A0A0A",bg:"#F5C8C8",border:"#E24B4A",bar:"#A32D2D",eyes:8};}
+function eyeRowHTML(eyes,risk){let h="";for(let i=0;i<eyes;i++)h+='<span style="font-size:26px;line-height:1;">👁️</span>';if(risk>=75)h+='<span style="font-size:24px;margin-left:4px;">🚔</span>';return h;}
+function getDisguiseLabelIdx(d){if(d<15)return 0;if(d<35)return 1;if(d<60)return 2;if(d<82)return 3;return 4;}
+function getFlavorComment(){const equipped=SLOT_KEYS.map(s=>state.equipped[s]).filter(Boolean);if(equipped.length===0)return"まだ何も装備していません。さあ変装しましょう！";const{comboName}=getComboBonus();if(comboName==="ゴリラ完全体")return"ゴリラの着ぐるみを上下コンプリート。もはや逃亡者ではなくゴリラだ。";if(comboName==="老人の二重装備")return"ハゲヅラに老人メイク。鏡を見てちょっと怖くなった。";if(comboName==="お祭り芸人")return"ピエロ＋サンタ。もはやお祭りの呼び込みだ。";if(state.equipped.shoes?.id==="s7")return"フリッパーをはいて逃げるのは無理がある。ペタペタと足音が響いている。";if(state.equipped.bag?.id==="g8")return"現金の袋をぶら下げて歩いている。これは誰がどう見ても怪しい。";if(state.equipped.bottom?.id==="b6")return"ふんどし一丁で街に出た。もはや変装ではなく主張だ。";if(state.equipped.face?.id==="f7")return"ピエロメイクで移動中。子供が泣き止まない。大人は目を逸らしている。";return equipped[equipped.length-1].flavor;}
+function calcDiscardCount(round){if(round===0)return 1;if(round===1)return 2;return 3;}
+function chooseDiscards(count){const equipped=SLOT_KEYS.map(s=>state.equipped[s]).filter(Boolean);return pick(equipped,Math.min(count,equipped.length));}
+function getStealRisk(){const baseSus=state.suspicion+12*(state.stealCount+1);const d=calcDisguise();const diff=LOCATIONS[state.locationIdx].diff;return Math.max(5,Math.min(90,Math.round(baseSus*diff*0.42-d*.28)));}
+function getEscapeScenario(risk,caught){const loc=LOCATIONS[state.locationIdx];const next=LOCATIONS[Math.min(state.locationIdx+1,LOCATIONS.length-1)];if(caught)return{scenes:[`${loc.flag}${loc.name}の路地を急ぎ足で歩いていると`,`「ちょっとそこの方」`,`振り向くと制服の警官が二人`,`…`,`終わった`],result:"御用です！！",success:false};if(risk<25)return{scenes:[`${loc.flag}${loc.name}の改札を堂々と通り抜けた`,`誰も振り返らない`,`完璧だ`],result:`→ ${next.flag}${next.name}へ出発！`,success:true};if(risk<55)return{scenes:[`${loc.flag}${loc.name}の検問に差しかかった`,`警官と目が合った`,`…じっと見られている`,`…`,`通過した！`],result:`→ ${next.flag}${next.name}へ！（ヒヤヒヤ）`,success:true};return{scenes:[`前から警官が歩いてきた`,`目を逸らす`,`足音が近づく`,`…`,`…`,`すれ違った！！`],result:`→ ${next.flag}${next.name}へ！（間一髪！）`,success:true};}
+const STEAL_SUCCESS=[["おじゃましま～す。ドロボーですよー","…物色中…","…ありましたよー","いただいていきますね。えへへ","空き巣成功！"],["ガラスを割って侵入","…家の中はがらんとしてる","タンスの中に何かある…","ズボッ。あった！","空き巣成功！"],["裏口から忍び込む","…しーん…","クローゼットを漁る","お！これは使えそう","空き巣成功！"]];
+const STEAL_FAIL=[["窓から忍び込もうとすると","隣人に目撃された","「ドロボー！」","…","近所中に響き渡った"],["玄関を開けた瞬間","中に人がいた","「だれ！？」","…","逃げ場がない"]];
+
+let escapeCallback=null;
+function runAnimation(titleTxt,scenes,resultTxt,resultColor,discardHTML,cb){escapeCallback=cb;document.getElementById("esc-title").textContent=titleTxt;document.getElementById("esc-scene").textContent="";document.getElementById("esc-result").textContent="";document.getElementById("esc-discard").innerHTML="";document.getElementById("esc-ok").style.display="none";document.getElementById("escape-overlay").classList.add("show");let i=0;function next(){if(i<scenes.length){const line=scenes[i++];if(line==="…"){let dots="",d=0;const iv=setInterval(()=>{dots+="・";const el=document.getElementById("esc-scene");el.textContent=el.textContent.replace(/・+$/,"")+dots;if(++d>=3){clearInterval(iv);setTimeout(next,350);}},280);}else{const el=document.getElementById("esc-scene");el.textContent=(el.textContent?el.textContent+"\n":"")+line;setTimeout(next,680);}}else{const re=document.getElementById("esc-result");re.textContent=resultTxt;re.style.color=resultColor;if(discardHTML){setTimeout(()=>{document.getElementById("esc-discard").innerHTML=discardHTML;document.getElementById("esc-ok").style.display="inline-flex";},700);}else{document.getElementById("esc-ok").style.display="inline-flex";}}}setTimeout(next,350);}
+function afterEscape(){document.getElementById("escape-overlay").classList.remove("show");if(escapeCallback)escapeCallback();}
+
+function proceed(){const risk=getRisk();const caught=Math.random()*100<risk;const discards=caught?[]:chooseDiscards(calcDiscardCount(state.round));const scenario=getEscapeScenario(risk,caught);const discardHTML=(!caught&&discards.length>0)?"<strong>— 移動中に目撃された変装 —</strong><br>"+discards.map(d=>`「${d.name}」${DISCARD_MSGS[Math.floor(Math.random()*DISCARD_MSGS.length)]}`).join("<br>"):null;runAnimation(`${LOCATIONS[state.locationIdx].flag}${LOCATIONS[state.locationIdx].name} 脱出`,scenario.scenes,scenario.result,scenario.success?"#185FA5":"#A32D2D",discardHTML,()=>{if(caught){state.gameOver=true;state.won=false;render();return;}const discardIds=new Set(discards.map(d=>d.id));state.hand=state.hand.filter(i=>!discardIds.has(i.id));SLOT_KEYS.forEach(s=>{if(state.equipped[s]&&discardIds.has(state.equipped[s].id))state.equipped[s]=null;});SLOT_KEYS.forEach(s=>{const it=state.equipped[s];if(it)state.itemAge[it.id]=(state.itemAge[it.id]||0)+1;});state.prevEquipped={...state.equipped};state.locationIdx++;if(state.locationIdx>=LOCATIONS.length-1){state.gameOver=true;state.won=true;render();return;}state.round++;state.stealCount=0;state.suspicion=Math.max(10,state.suspicion-5);state.message=`${LOCATIONS[state.locationIdx].flag}${LOCATIONS[state.locationIdx].name}に到着！変装を見直しましょう。`;if(LOCATIONS[state.locationIdx].diff>=2.5){const bonus=[];SLOT_KEYS.forEach(s=>{const av=ITEMS[s].filter(i=>!state.hand.find(h=>h.id===i.id));if(av.length>0)bonus.push(pick(av,1)[0]);});state.hand=[...state.hand,...bonus];}render();});}
+function steal(){const stealRisk=getStealRisk();const caught=Math.random()*100<stealRisk;if(caught){const sc=STEAL_FAIL[Math.floor(Math.random()*STEAL_FAIL.length)];runAnimation("空き巣 失敗！",sc,"御用です！！","#A32D2D",null,()=>{state.gameOver=true;state.won=false;render();});return;}const sc=STEAL_SUCCESS[Math.floor(Math.random()*STEAL_SUCCESS.length)];state.suspicion=Math.min(100,state.suspicion+10);state.stealCount++;const newItems=[];SLOT_KEYS.forEach(s=>{const pool=ITEMS[s].filter(i=>!state.hand.find(h=>h.id===i.id));if(pool.length>0)newItems.push(pick(pool,1)[0]);});state.hand=[...state.hand,...newItems];const acquired=newItems.map(i=>i.emoji+i.name).join("、");runAnimation("空き巣",sc,`入手：${acquired||"なし"}`,"#185FA5",null,()=>{state.message=`空き巣成功（${state.stealCount}回目）！疑惑度が少し上昇。`;render();});}
+function activateSlot(slot){state.activeSlot=state.activeSlot===slot?null:slot;render();}
+function equipItem(id){const item=state.hand.find(i=>i.id===id);if(!item)return;state.equipped[item.slot]=item;state.activeSlot=null;render();}
+function restart(){state={round:0,locationIdx:0,equipped:{head:null,face:null,top:null,bottom:null,bag:null,shoes:null},hand:dealHand(),prevEquipped:{head:null,face:null,top:null,bottom:null,bag:null,shoes:null},itemAge:{},suspicion:20,activeSlot:null,stealCount:0,message:"",gameOver:false,won:false,crime:CRIMES[Math.floor(Math.random()*CRIMES.length)]};render();}
+
+function render(){
+  const root=document.getElementById("game-root");
+  if(state.gameOver){
+    const loc=LOCATIONS[state.locationIdx];const dateStr=`令和7年 ${Math.floor(Math.random()*12)+1}月${Math.floor(Math.random()*28)+1}日`;const desc=CRIME_DESCS[state.crime]||"各地を逃げ回った末、ついに観念した。";
+    if(state.won){root.innerHTML=`<div class="card" style="text-align:center;padding:2rem;"><div style="font-size:52px;margin-bottom:8px;">🎉</div><h2 style="margin-bottom:8px;">大脱走成功！火星まで逃げ延びた！</h2><p style="margin-bottom:16px;color:#666;">逃亡ルート：${LOCATIONS.slice(0,state.locationIdx+1).map(l=>l.flag+l.name).join(" → ")}</p><div class="btn-row" style="justify-content:center;"><button class="btn btn-primary" onclick="restart()">もう一度遊ぶ</button></div></div>`;return;}
+    root.innerHTML=`<div class="card"><div class="newspaper"><div class="news-masthead">🗞 号外　逃亡犯逮捕　${dateStr}</div><div class="news-title">${state.crime}犯！${loc.name}で逮捕！</div><div class="news-subtitle">逃亡ルート：${LOCATIONS.slice(0,state.locationIdx+1).map(l=>l.name).join(" → ")}</div><hr class="news-rule"><div class="news-body">${loc.name}警察は${loc.name}市内で指名手配中の${state.crime}犯の身柄を確保した。${desc}逃亡先は${LOCATIONS.slice(0,state.locationIdx).map(l=>l.name).join("、")}に及んでおり、逃亡劇は${loc.name}でついに幕を閉じた。容疑者は「もう一歩だったのに」と悔しそうだったと目撃者は語った。</div></div><div class="btn-row" style="margin-top:12px;"><button class="btn btn-primary" onclick="restart()">もう一度遊ぶ</button></div></div>`;return;
+  }
+  const loc=LOCATIONS[state.locationIdx];const disguise=calcDisguise();const risk=getRisk();const stealRisk=getStealRisk();const ri=getRiskInfo(risk);const sri=getRiskInfo(stealRisk);const dIdx=getDisguiseLabelIdx(disguise);const flavor=getFlavorComment();const equippedCount=SLOT_KEYS.filter(s=>state.equipped[s]).length;const{comboName}=getComboBonus();const barColor=disguise<30?"#C0392B":disguise<55?"#E67E22":disguise<75?"#2B8A3E":"#185FA5";
+  const locHTML=LOCATIONS.map((l,i)=>{if(i>state.locationIdx+1)return"";let cls="loc-badge";if(i<state.locationIdx)cls+=" past";if(i===state.locationIdx)cls+=" current";return`<span class="${cls}">${l.flag}${l.name}</span>`;}).join("");
+  function slotHTML(slot,extraStyle=""){const item=state.equipped[slot];const isActive=state.activeSlot===slot;return`<div class="slot${isActive?" active":""}${item?" set":""}" style="${extraStyle}" onclick="activateSlot('${slot}')"><div class="slot-emoji">${item?item.emoji:SLOT_ICONS[slot]}</div><div class="slot-label">${SLOT_LABELS[slot]}</div>${item?`<div class="slot-item-name">${item.name}</div>`:""}</div>`;}
+  const labelsRev=[...DISGUISE_LABELS].reverse();const labelsHTML=labelsRev.map((lbl,i)=>{const li=DISGUISE_LABELS.length-1-i;return`<div class="disguise-label-row"><div class="disguise-tick${li===dIdx?" active":""}"></div><div class="disguise-label${li===dIdx?" active":""}">${li===dIdx?"▶ ":""}${lbl}</div></div>`;}).join("");
+  const handFiltered=state.activeSlot?state.hand.filter(i=>i.slot===state.activeSlot):state.hand;
+  root.innerHTML=`
+  <div class="card" style="margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;"><span style="font-size:14px;font-weight:600;">${loc.flag} ${loc.name}</span><span style="font-size:12px;color:#999;">ラウンド ${state.round+1}</span></div><div style="display:flex;gap:5px;flex-wrap:wrap;">${locHTML}</div></div>
+  <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;">
+    <div class="card" style="flex:0 0 auto;padding:.75rem;"><div class="section-label">変装スロット</div><div style="display:flex;gap:6px;align-items:flex-start;"><div style="display:flex;flex-direction:column;gap:5px;align-items:center;">${slotHTML("head")}${slotHTML("face")}${slotHTML("top")}${slotHTML("bottom")}${slotHTML("shoes","width:86px;")}</div><div style="display:flex;flex-direction:column;"><div style="height:${86*3+5*2}px;"></div>${slotHTML("bag")}</div></div></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;">
+      <div class="card" style="padding:.75rem;flex:1;"><div class="section-label">変装度${comboName?` ✨ ${comboName}`:""}</div><div style="display:flex;gap:10px;height:200px;"><div style="display:flex;flex-direction:column;align-items:center;"><div class="disguise-bar-outer" style="width:44px;flex:1;"><div class="disguise-bar-inner" style="height:${disguise}%;background:${barColor};"></div></div></div><div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;">${labelsHTML}</div></div></div>
+      <div class="risk-display" style="background:${ri.bg};border-color:${ri.border};"><div class="section-label" style="color:${ri.color};margin-bottom:5px;">逮捕リスク</div><div class="risk-eyes">${eyeRowHTML(ri.eyes,risk)}</div><div class="risk-text-big" style="color:${ri.color};">${ri.text}</div><div style="font-size:12px;color:${ri.color};opacity:.8;margin-bottom:4px;">${ri.sub}</div><div class="risk-bar-wrap"><div class="risk-bar-inner" style="width:${risk}%;background:${ri.bar};"></div></div></div>
+    </div>
+  </div>
+  <div class="comment-box">🪞 ${flavor}</div>
+  ${state.message?`<div class="comment-box" style="background:#EAF3DE;border-color:#C0DD97;color:#27500A;margin-top:6px;">✅ ${state.message}</div>`:""}
+  <div class="card" style="margin-top:10px;"><div class="section-label">手札${state.activeSlot?` — ${SLOT_LABELS[state.activeSlot]}用を選択`:""}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">${SLOT_KEYS.map(s=>`<button class="btn" style="font-size:11px;padding:4px 8px;${state.activeSlot===s?"border-color:#378ADD;background:#E6F1FB;":""}" onclick="activateSlot('${s}')">${SLOT_ICONS[s]}${SLOT_LABELS[s]}</button>`).join("")}${state.activeSlot?`<button class="btn" style="font-size:11px;padding:4px 8px;" onclick="activateSlot(null)">✕</button>`:""}</div><div class="hand-grid">${handFiltered.map(item=>{const inSlot=state.equipped[item.slot]&&state.equipped[item.slot].id===item.id;return`<div class="hand-item${inSlot?" equipped-badge":""}" onclick="equipItem('${item.id}')"><div class="ie">${item.emoji}</div><div class="inm">${item.name}</div><div class="ist">${starsHTML(item.stars)}</div><div class="isl">${SLOT_LABELS[item.slot]}</div></div>`;}).join("")}</div><div style="font-size:11px;color:#aaa;margin-top:6px;">手札 ${state.hand.length}枚　装備 ${equippedCount}/6</div></div>
+  <div class="card"><div class="btn-row"><button class="btn btn-primary" onclick="proceed()" ${equippedCount===0?"disabled":""}>　${loc.name}を脱出する →</button><button class="btn" onclick="steal()" style="border-color:${sri.border};">🏠 空き巣に入る（リスク：<span style="color:${sri.color};font-weight:600;">${sri.text}</span>）</button></div></div>`;
+}
+render();
+</script>
+</body>
+</html>
